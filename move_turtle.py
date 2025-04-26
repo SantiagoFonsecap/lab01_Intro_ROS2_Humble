@@ -41,6 +41,117 @@ class TurtleController(Node):
         self.publisher_.publish(msg)
         time.sleep(1.0)
 
+    def draw_F(self):
+        msg = Twist()
+        msg.linear.x = 4.0
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        msg.linear.x = 0.0
+        msg.angular.z = -1.5
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        msg.linear.x = 2.0
+        msg.angular.z = 0.0
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        msg.linear.x = -2.0
+        self.publisher_.publish(msg)#Regresa de primer linea horizontal
+        time.sleep(1.0)
+        msg.linear.x = 0.0
+        msg.angular.z = 1.5
+        self.publisher_.publish(msg)
+        time.sleep(1.0)#Regresa al angulo inicial
+        msg.angular.z = 0.0
+        msg.linear.x = -2.0
+        self.publisher_.publish(msg)#Se ubica en el centro 
+        time.sleep(1.0)
+        msg.linear.x = 0.0
+        msg.angular.z = -1.5
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        msg.linear.x = 2.0
+        msg.angular.z = 0.0
+        self.publisher_.publish(msg)
+        time.sleep(1.0)       
+
+    def draw_C(self):
+        msg = Twist()
+        msg.linear.x = 2.0
+        msg.angular.z = 2.0
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+
+    def draw_S(self):
+        msg = Twist()
+        msg.linear.x = 2.0
+        msg.angular.z = 2.0
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        msg.angular.z = -2.0
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+        self.publisher_.publish(msg)
+        time.sleep(1.0)
+
+    def draw_J(self):
+        msg=Twist()
+        msg.linear.x=2.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+        msg.linear.x = 0.0
+        msg.angular.z = 2.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+        msg.angular.z = 0.0
+        msg.linear.x = 3.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+        msg.linear.x = 0.0
+        msg.angular.z = 2.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+        msg.linear.x = 1.0
+        msg.angular.z = 0.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+        msg.linear.x = -2.0
+        msg.angular.z = 0.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+
+    def draw_D(self):
+        msg=Twist()
+        msg.linear.x = 4.0
+        msg.angular.z = -3.8
+        self.publisher_.publish(msg)
+        time.sleep(2.0)   
+        msg.linear.x = 0.0
+        msg.angular.z = -1.8
+        self.publisher_.publish(msg)
+        time.sleep(2.0) 
+        msg.linear.x = 2.2
+        msg.angular.z = 0.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+
+    def draw_P(self):
+        msg=Twist()
+        msg.linear.x = 4.0
+        msg.angular.z = 0.0
+        self.publisher_.publish(msg)
+        time.sleep(2.0)
+        msg.linear.x = 0.0
+        msg.angular.z = -1.8
+        self.publisher_.publish(msg)
+        time.sleep(2.0) 
+        msg.linear.x = 2.0
+        msg.angular.z = -3.8
+        self.publisher_.publish(msg)
+        time.sleep(2.0)   
     
     def get_key(self):
         fd = sys.stdin.fileno()
@@ -71,6 +182,24 @@ class TurtleController(Node):
             elif key.lower() == 'm':
                 self.get_logger().info("Dibujando M...")
                 self.draw_M()
+            elif key.lower() == 'f':
+                self.get_logger().info("Dibujando F...")
+                self.draw_F()
+            elif key.lower() == 'c':
+                self.get_logger().info("Dibujando C...")
+                self.draw_C()
+            elif key.lower() == 's':
+                self.get_logger().info("Dibujando S...")
+                self.draw_S()
+            elif key.lower() == 'j':
+                self.get_logger().info("Dibujando j...")
+                self.draw_J()
+            elif key.lower() == 'd':
+                self.get_logger().info("Dibujando D...")
+                self.draw_D()
+            elif key.lower() == 'p':
+                self.get_logger().info("Dibujando P...")
+                self.draw_P()
             
 
 def main(args=None):
