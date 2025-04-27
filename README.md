@@ -25,3 +25,5 @@ El código recibe la entrada del teclado y determina si es una letra de las inic
 Conclusiones 
 
 ◦ Debido a que no se tiene realimentacion de la posicion de la tortuga se pueden presentar errores, dado que no hay forma de saber si se cumplio la accion solicitada.
+
+◦ Por medio de la librería “threading” se logro que puedan ejecutar comandos en paralelo para evitar que el programa falle.
