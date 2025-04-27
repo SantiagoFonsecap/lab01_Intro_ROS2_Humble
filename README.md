@@ -12,7 +12,9 @@ Para el desarrollo del laboratorio se modifico el archivo move turtle.py creado 
 ◦ Flecha →: girar a la derecha.
 
 Se modifico tambien para que recibiese como entrada del teclado las inciales de los integrantes del grupo, que son J,D,M,P y S,C,F,P. 
-Para conseguir esto se hizo uso del modulo termiod en python con el cual se implemento la lectura de las entradas del teclado, con las cuales se especifico los patrones de movimiento deseado ante cada entrada al determinar la magnitud del movimiento lineal, su velocidad angular y duracion.
+
+
+Para conseguir los resultados mencionados, se hizo uso del modulo termiod en python con el cual se implemento la lectura de las entradas del teclado, con las cuales se especifico los patrones de movimiento deseado ante cada entrada al determinar la magnitud del movimiento lineal, su velocidad angular y duracion.
 Se implementaron tambien funciones para la alineacion de la tortuga con el fin de que al dibujar las letras lo haga de la forma apropiada.
 
 A continuacion se muestra el diagrama de flujo que representa la solucion.
