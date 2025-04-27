@@ -21,3 +21,7 @@ A continuación, se muestra el diagrama de flujo que representa la solución:
 ![Editor _ Mermaid Chart-2025-04-27-202030](https://github.com/user-attachments/assets/43b4f338-6ca3-40a4-beca-9aa96672f5ef)
 
 El código recibe la entrada del teclado y determina si es una letra de las iniciales del nombre de los miembros del equipo o si es una flecha, y ejecuta la acción asociada. En caso de ser una letra, la tortuga se posicionará en el ángulo y sentido adecuados para dibujar la letra deseada. Una vez que la acción se completa, el código permanece a la espera de otra entrada para su ejecución.
+
+Conclusiones 
+
+◦ Debido a que no se tiene realimentacion de la posicion de la tortuga se pueden presentar errores, dado que no hay forma de saber si se cumplio la accion solicitada.
