@@ -2,183 +2,157 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import sys, tty, termios
-from turtlesim.srv import TeleportAbsolute
 import time
+from turtlesim.msg import Pose
+import threading
+import math
 
 class TurtleController(Node):
     def __init__(self):
-        super().__init__('move_turtle')
+        super().__init__('turtle_controller')
         self.publisher_ = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
-        self.get_logger().info("Control con teclado iniciado")
+        self.theta=0.0
+        self.lock = threading.Lock()
+        self.pose_subscriber = self.create_subscription(Pose, '/turtle1/pose', self.actualizar_pose, 10)
+        """self.pose = None"""
+        self.running = True
 
-    def draw_M(self):
-        msg = Twist()
-        msg.linear.x = 4.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = 0.0
-        msg.angular.z = -2.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.angular.z = 0.0
-        msg.linear.x = 2.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = 0.0
-        msg.angular.z = -2.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.angular.z = 0.0
-        msg.linear.x = -2.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = 0.0
-        msg.angular.z = 4.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.angular.z = 0.0
-        msg.linear.x = -4.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
+        self.input_thread = threading.Thread(target=self.move_turtle)
+        self.input_thread.daemon = True
+        self.input_thread.start()
 
-    def draw_F(self):
-        msg = Twist()
-        msg.linear.x = 4.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = 0.0
-        msg.angular.z = -1.5
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = 2.0
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = -2.0
-        self.publisher_.publish(msg)#Regresa de primer linea horizontal
-        time.sleep(1.0)
-        msg.linear.x = 0.0
-        msg.angular.z = 1.5
-        self.publisher_.publish(msg)
-        time.sleep(1.0)#Regresa al angulo inicial
-        msg.angular.z = 0.0
-        msg.linear.x = -2.0
-        self.publisher_.publish(msg)#Se ubica en el centro 
-        time.sleep(1.0)
-        msg.linear.x = 0.0
-        msg.angular.z = -1.5
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.linear.x = 2.0
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)       
+    def actualizar_pose(self, msg):
+        self.theta = msg.theta
+        with self.lock:
+            self.theta = msg.theta
 
-    def draw_C(self):
-        msg = Twist()
-        msg.linear.x = 2.0
-        msg.angular.z = 2.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
+    def alinear_tortuga(self, angulo_objetivo):
+        tolerancia = 0.007
+        max_duracion = 15
+        velocidad = 0.2
 
-    def draw_S(self):
+        start_time = time.time()
+        while rclpy.ok() and (time.time() - start_time) < max_duracion:
+            with self.lock:
+                error = self._normalizar_angulo(angulo_objetivo - self.theta)
+
+            if abs(error) < tolerancia:
+                break
+
+            msg = Twist()
+            msg.angular.z = velocidad if error > 0 else -velocidad
+            self.publisher_.publish(msg)
+            time.sleep(0.05)
+
+        self.detener()
+
+    def _normalizar_angulo(self, angulo):
+        return math.atan2(math.sin(angulo), math.cos(angulo))
+    
+    def mover(self, lin_x, ang_z, duracion):
         msg = Twist()
-        msg.linear.x = 2.0
-        msg.angular.z = 2.0
+        msg.linear.x = lin_x
+        msg.angular.z = ang_z
+        tiempo_inicial = self.get_clock().now().seconds_nanoseconds()[0]
+        while self.get_clock().now().seconds_nanoseconds()[0] - tiempo_inicial < duracion:
+            self.publisher_.publish(msg)
+            time.sleep(0.1)
+
+    def detener(self):
+        msg = Twist()
+        msg.linear.x = 0.0
+        msg.angular.z = 0.0
         self.publisher_.publish(msg)
-        time.sleep(1.0)
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        msg.angular.z = -2.0
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
-        self.publisher_.publish(msg)
-        time.sleep(1.0)
+
+    
 
     def draw_J(self):
-        msg=Twist()
-        msg.linear.x=2.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
-        msg.linear.x = 0.0
-        msg.angular.z = 2.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
-        msg.angular.z = 0.0
-        msg.linear.x = 3.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
-        msg.linear.x = 0.0
-        msg.angular.z = 2.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
-        msg.linear.x = 1.0
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
-        msg.linear.x = -2.0
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
+        self.alinear_tortuga(0.0) #Apuntar hacia derecha
+        self.mover(1.0, 0.0, 1.0) #Parte superior
+        self.alinear_tortuga(-math.pi / 2)  # Apuntar hacia abajo
+        self.mover(1.5, 0.0, 2)      # Hacia abajo
+        self.mover(1.0, -1.5, 1.5)   # Curva derecha
+        self.detener()    
 
     def draw_D(self):
-        msg=Twist()
-        msg.linear.x = 4.0
-        msg.angular.z = -3.8
-        self.publisher_.publish(msg)
-        time.sleep(2.0)   
-        msg.linear.x = 0.0
-        msg.angular.z = -1.8
-        self.publisher_.publish(msg)
-        time.sleep(2.0) 
-        msg.linear.x = 2.2
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
+        self.alinear_tortuga(math.pi / 2) #Apuntar arriba
+        self.mover(3.0, 0.0, 1.0) #Parte derecha
+        self.alinear_tortuga(0.0) #Apuntar hacia derecha
+        self.mover(1.0, -1.0, 2.2) #Barriga
+
+    def draw_M(self):
+        self.alinear_tortuga(math.pi / 2)  # Apuntar hacia arriba
+        self.mover(1.5, 0.0, 2.0) #Linea vertical izquierda
+        self.alinear_tortuga(-math.pi / 4) # Apuntar a -45deg
+        self.mover(1.5, 0.0, 1.0) #Linea diagonal izquierda
+        self.alinear_tortuga(math.pi / 4) # Apuntar a 45deg
+        self.mover(1.5, 0.0, 1.0) #Linea diagonal derecha
+        self.alinear_tortuga(-math.pi / 2) # Apuntar a 45deg
+        self.mover(1.5, 0.0, 2.0) #Linea diagonal derecha
+
+    def draw_S(self):
+        self.alinear_tortuga(-math.pi / 4) 
+        self.mover(1.0, 1.5, 3.0) 
+        self.mover(1.0, -1.5, 3.0)
+        
+    def draw_C(self):
+        self.alinear_tortuga(-math.pi / 2) #Apuntar abajo
+        self.mover(1.0, -1.5, 1.8) #Curva inferior
+        self.mover(2.0, 0.0, 1.0) #Recta
+        self.mover(1.0, -1.5, 1.8) #Curva superior
+    
+    def draw_F(self):
+        self.alinear_tortuga(math.pi / 2) #Apuntar arriba
+        self.mover(2.0, 0.0, 2.0) #Vertical
+        self.alinear_tortuga(0.0) #Apuntar hacia derecha
+        self.mover(2.0, 0.0, 1.0) #Horizontal superior
+        self.mover(-2.0, 0.0, 1.0)
+        self.alinear_tortuga(math.pi / 2) #Apuntar arriba
+        self.mover(-2.0, 0.0, 1.0) #Reroceder a la mitad
+        self.alinear_tortuga(0.0) #Apuntar hacia derecha
+        self.mover(1.5, 0.0, 1.0) #Horizontal superior
 
     def draw_P(self):
-        msg=Twist()
-        msg.linear.x = 4.0
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        time.sleep(2.0)
-        msg.linear.x = 0.0
-        msg.angular.z = -1.8
-        self.publisher_.publish(msg)
-        time.sleep(2.0) 
-        msg.linear.x = 2.0
-        msg.angular.z = -3.8
-        self.publisher_.publish(msg)
-        time.sleep(2.0)   
+        self.alinear_tortuga(math.pi / 2) #Apuntar arriba
+        self.mover(2.0, 0.0, 2.0) #Parte derecha (Recta)
+        self.alinear_tortuga(0.0) #Apuntar hacia derecha
+        self.mover(1.0, -1.5, 1.5) #Barriga
     
     def get_key(self):
         fd = sys.stdin.fileno()
-        old = termios.tcgetattr(fd)
+        old_settings = termios.tcgetattr(fd)
         try:
-            tty.setraw(sys.stdin.fileno())
-            key = sys.stdin.read(1)
+            tty.setraw(fd)
+            ch1 = sys.stdin.read(1)
+            if ch1 == '\x1b':
+                ch2 = sys.stdin.read(1)
+                ch3 = sys.stdin.read(1)
+                return ch1 + ch2 + ch3
+            else:
+                return ch1
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old)
-        return key
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
     def move_turtle(self):
-        while rclpy.ok():
+        print("Controles:")
+        print("  j - Dibujar letra J ")
+        print("  d - Dibujar letra D ")
+        print("  m - Dibujar letra M ")
+        print("  p - Dibujar letra P ")
+        print("  s- Dibujar letra S ")
+        print("  c- Dibujar letra C ")
+        print("  f- Dibujar letra F ")
+        print("  Flechas - Mover la tortuga (↑ ↓ ← →)")
+        while self.running:
             key = self.get_key()
-            msg = Twist()
-            if key == '\x1b':  # ESC sequence
-                if sys.stdin.read(1) == '[':
-                    arrow = sys.stdin.read(1)
-                    if arrow == 'A':  # Flecha ↑
-                        msg.linear.x = 2.0
-                    elif arrow == 'B':  # Flecha ↓
-                        msg.linear.x = -2.0
-                    elif arrow == 'C':  # Flecha →
-                        msg.angular.z = -2.0
-                    elif arrow == 'D':  # Flecha ←
-                        msg.angular.z = 2.0
-                    self.publisher_.publish(msg)    
+            if key == '\x1b[A':
+                self.mover(1.5, 0.0, 0.2)  
+            elif key == '\x1b[B':
+                self.mover(-1.5, 0.0, 0.2)    
+            elif key == '\x1b[C':
+                self.mover(0.0, -1.0, 0.2)
+            elif key == '\x1b[D':
+                self.mover(0.0, 1.0, 0.2)
             elif key.lower() == 'm':
                 self.get_logger().info("Dibujando M...")
                 self.draw_M()
@@ -192,7 +166,7 @@ class TurtleController(Node):
                 self.get_logger().info("Dibujando S...")
                 self.draw_S()
             elif key.lower() == 'j':
-                self.get_logger().info("Dibujando j...")
+                self.get_logger().info("Dibujando J...")
                 self.draw_J()
             elif key.lower() == 'd':
                 self.get_logger().info("Dibujando D...")
@@ -204,10 +178,13 @@ class TurtleController(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    move_turtle = TurtleController()
+    node = TurtleController()
+
     try:
-        move_turtle.move_turtle()
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-    TurtleController.destroy_node()
-    rclpy.shutdown()
+    finally:
+        if rclpy.ok():
+            node.destroy_node()
+            rclpy.shutdown()
